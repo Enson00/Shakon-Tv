@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shakon TV Pro</title>
+<style>
+/* ASOSIY STIL */
+body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; display: flex; flex-direction: column; -webkit-user-select: none; }
+
+/* HEADER ANIMATSIYASI */
+header { 
+    background: #111; 
+    padding: 10px 15px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-bottom: 1px solid #222; 
+    position: sticky; 
+    top: 0; 
+    z-index: 1001; 
+}
+
+/* SHAKON TV LOGOTIPI UCHUN MAXSUS EFFEKT */
+.logo-text { 
+    font-size: 18px; 
+    font-weight: 900; 
+    color: #fff; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    /* Neon effekti */
+    text-shadow: 0 0 5px #0088cc, 0 0 10px #0088cc;
+    animation: logoGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+  from { text-shadow: 0 0 5px #0088cc, 0 0 10px #0088cc; opacity: 0.9; }
+  to { text-shadow: 0 0 15px #00aaff, 0 0 30px #00aaff, 0 0 40px #00aaff; opacity: 1; }
+}
+
+.social-icons { display: flex; gap: 12px; align-items: center; }
+.social-icons img { width: 24px; height: 24px; transition: 0.3s; }
+.social-icons a:active img { transform: scale(0.8); }
+
+/* VIDEO PLEYER VA LIVE */
+.video-container { position: sticky; top: 45px; z-index: 1000; background: black; width: 100%; border-bottom: 2px solid #222; }
+video { width: 100%; max-height: 210px; display: block; }
+
+video::-webkit-media-controls-current-time-display,
+video::-webkit-media-controls-time-remaining-display,
+video::-webkit-media-controls-timeline { display: none !important; }
+
+.live-indicator {
+    position: absolute; bottom: 12px; left: 12px; background: rgba(255, 0, 0, 0.8);
+    color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px;
+    font-weight: bold; display: flex; align-items: center; gap: 5px; z-index: 110;
+}
+.live-dot { width: 6px; height: 6px; background: white; border-radius: 50%; animation: blink 1s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+#video-fav-btn {
+  position: absolute; top: 12px; right: 12px; background: rgba(0, 0, 0, 0.5); color: #fff;
+  width: 40px; height: 40px; border-radius: 50%; display: none; align-items: center;
+  justify-content: center; font-size: 20px; cursor: pointer; z-index: 110; border: 1px solid rgba(255,255,255,0.2);
+}
+#video-fav-btn.active { color: #ff4757; border-color: #ff4757; }
+
+/* KATEGORIYALAR */
+.cat-container { display: flex; overflow-x: auto; padding: 12px 5px; gap: 10px; background: #080808; border-bottom: 1px solid #222; scrollbar-width: none; }
+.cat-container::-webkit-scrollbar { display: none; }
+.cat-btn { background: #1a1a1a; color: #bbb; border: 1px solid #333; padding: 8px 16px; border-radius: 20px; font-size: 13px; white-space: nowrap; transition: 0.3s; }
+.cat-btn.active { background: #0088cc; border-color: #00aaff; color: #fff; box-shadow: 0 0 10px rgba(0,136,204,0.4); }
+
+/* RO'YXAT */
+#search { width: 92%; margin: 12px auto; display: block; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #111; color: white; outline: none; }
+#channels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; }
+.channel { background: #141414; padding: 18px 10px; border-radius: 12px; text-align: center; border: 1px solid #222; font-size: 14px; position: relative; transition: 0.2s; }
+.channel:active { background: #1a1a1a; transform: scale(0.97); }
+.list-fav { position: absolute; top: 5px; right: 8px; font-size: 12px; display: none; color: #ff4757; }
+.list-fav.active { display: block; }
+.loading { text-align: center; padding: 20px; color: #666; }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo-text">📺 SHAKON TV</div>
+    <div class="social-icons">
+        <a href="http://t.me/Qaraken_TV_bot" target="_blank">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="TG">
+        </a>
+        <a href="https://www.instagram.com/sharapat_0830?igsh=bjZoaXRoMDR5czhx" target="_blank">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="IG">
+        </a>
+    </div>
+</header>
+
+<div class="video-container">
+    <video id="player" controls autoplay muted playsinline></video>
+    <div class="live-indicator"><div class="live-dot"></div> LIVE</div>
+    <div id="video-fav-btn" onclick="toggleCurrentFav()">❤️</div>
+</div>
+
+<div class="cat-container">
+    <div class="cat-btn" onclick="filterByCat('NOKIS', this)">🏙️ Nókis</div>
+    <div class="cat-btn active" onclick="filterByCat('ALL', this)">🏠 Hammasi</div>
+    <div class="cat-btn" onclick="filterByCat('FAV', this)">⭐ Sevimlilar</div>
+    <div class="cat-btn" onclick="filterByCat('QAZ', this)">🇰🇿 Qozoq</div>
+    <div class="cat-btn" onclick="filterByCat('UZB', this)">🇺🇿 O'zbek</div>
+    <div class="cat-btn" onclick="filterByCat('RUS', this)">🇷🇺 Ruscha</div>
+    <div class="cat-btn" onclick="filterByCat('SPORT', this)">⚽ Sport</div>
+</div>
+
+<input type="text" id="search" placeholder="Kanal qidirish...">
+<div id="loading" class="loading">Yuklanmoqda...</div>
+<div id="channels"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+const playlistURL = "https://raw.githubusercontent.com/Dimonovich/TV/Dimonovich/FREE/TV?m3u8";
+let allChannels = [], currentList = [], currentPlayingChannel = "";
+let favorites = JSON.parse(localStorage.getItem('shakon_favs')) || [];
+const video = document.getElementById("player"), favBtn = document.getElementById("video-fav-btn");
+let hls = null, hideTimeout;
+
+function render(list) {
+    const container = document.getElementById("channels"); container.innerHTML = "";
+    const filtered = list.filter(ch => !ch.name.match(/Обновление|Android TV|INFO|Посмотри|CHD-TV RU|CHD TV Rock/i));
+    filtered.slice(0, 100).forEach(ch => {
+        let isFav = favorites.includes(ch.name);
+        let div = document.createElement('div');
+        div.className = 'channel';
+        div.innerHTML = `<span class="list-fav ${isFav ? 'active' : ''}">❤️</span>${ch.name}`;
+        div.onclick = () => play(ch.url, ch.name);
+        container.appendChild(div);
+    });
+}
+
+function play(url, name){
+    currentPlayingChannel = name; if (hls) hls.destroy(); video.muted = false;
+    updateFavBtnUI(); favBtn.style.display = "flex"; favBtn.style.opacity = "1";
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => { favBtn.style.opacity = "0"; setTimeout(() => { favBtn.style.display = "none"; }, 500); }, 7000);
+
+    if (Hls.isSupported()) {
+        hls = new Hls(); hls.loadSource(url); hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } else { video.src = url; video.play(); }
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function toggleCurrentFav() {
+    if(!currentPlayingChannel) return;
+    if (favorites.includes(currentPlayingChannel)) favorites = favorites.filter(f => f !== currentPlayingChannel);
+    else favorites.push(currentPlayingChannel);
+    localStorage.setItem('shakon_favs', JSON.stringify(favorites));
+    updateFavBtnUI(); render(currentList); 
+}
+
+function updateFavBtnUI() { favBtn.classList.toggle('active', favorites.includes(currentPlayingChannel)); }
+
+function filterByCat(cat, btn) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); const c = cat.toUpperCase();
+    if (c === 'NOKIS') currentList = allChannels.filter(ch => /JASLAR|QARAQALPAQ|AMUDARYO|ELLIKQALA|NOKIS|NUKUS|QR/i.test(ch.name));
+    else if (c === 'FAV') currentList = allChannels.filter(ch => favorites.includes(ch.name));
+    else if (c === 'QAZ') currentList = allChannels.filter(ch => /KZ|KAZ|ХАБАР|ЕЛ АРНА|QAZ|ҚАЗАҚ/i.test(ch.name));
+    else if (c === 'UZB') currentList = allChannels.filter(ch => /UZ|O'ZBEK|UZB|MILLIY/i.test(ch.name));
+    else if (c === 'RUS') currentList = allChannels.filter(ch => /RUS|РОССИЯ|РТР|NTW|THT|CTC/i.test(ch.name));
+    else if (c === 'SPORT') currentList = allChannels.filter(ch => /SPORT|FUTBOL|MATCH|ARENA/i.test(ch.name));
+    else currentList = allChannels;
+    render(currentList);
+}
+
+document.getElementById('search').oninput = (e) => {
+    let val = e.target.value.toLowerCase();
+    render(allChannels.filter(ch => ch.name.toLowerCase().includes(val)));
+};
+
+fetch(playlistURL).then(res => res.text()).then(data => {
+    let lines = data.split("\n"), currentName = "";
+    lines.forEach(line => {
+        line = line.trim();
+        if(line.startsWith("#EXTINF")) currentName = line.split(",")[1] || "";
+        else if(line.startsWith("http") && currentName !== ""){
+            allChannels.push({ name: currentName, url: line });
+            currentName = "";
+        }
+    });
+    document.getElementById("loading").style.display = "none";
+    currentList = allChannels; render(currentList);
+});
+</script>
+</body>
+</html>
